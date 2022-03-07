@@ -16,10 +16,10 @@ type Block struct {
 }
 
 // DeriveHash makes a new hash based
-func (b *Block) DeriveHash() {
-	info := bytes.Join([][]byte{b.Data, b.PreviousHash}, []byte{})
+func (block *Block) DeriveHash() {
+	info := bytes.Join([][]byte{block.Data, block.PreviousHash}, []byte{})
 	hash := sha256.Sum256(info)
-	b.Hash = hash[:]
+	block.Hash = hash[:]
 }
 
 // Create a block on the chain

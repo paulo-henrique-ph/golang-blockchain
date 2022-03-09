@@ -1,25 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"strconv"
+	"os"
 
 	"github.com/paulo-henrique-ph/golang-blockchain/blockchain"
+	"github.com/paulo-henrique-ph/golang-blockchain/commandline"
 )
 
 func main() {
+	defer os.Exit(0)
+
 	chain := blockchain.InitBlockChain()
+	defer chain.Database.Close()
 
-	chain.AddBlock("1")
-	chain.AddBlock("2")
-	chain.AddBlock("3")
-
-	for _, block := range chain.Blocks {
-		fmt.Printf("Previous Hash: %x\n", block.PreviousHash)
-		fmt.Printf("Data in block: %s\n", block.Data)
-		fmt.Printf("Hash: %x\n", block.Hash)
-
-		pow := blockchain.NewProof(block)
-		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
-	}
+	cli := commandline.CommandLine{Blockchain: chain}
+	cli.Run()
 }

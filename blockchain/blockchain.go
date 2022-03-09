@@ -98,6 +98,7 @@ func (iter *BlockChainIterator) Next() *Block {
 
 	err := iter.Database.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(iter.CurrentHash)
+		Handle(err)
 		err = item.Value(func(value []byte) error {
 			encodedBlock = append([]byte{}, value...)
 

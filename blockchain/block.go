@@ -11,7 +11,7 @@ type Block struct {
 	Hash         []byte
 	Transactions []*Transaction
 	PreviousHash []byte
-	Nounce       int
+	Nonce        int
 }
 
 func (block *Block) HashTransactions() []byte {
@@ -31,10 +31,10 @@ func (block *Block) HashTransactions() []byte {
 func CreateBlock(txs []*Transaction, previousHash []byte) *Block {
 	block := &Block{[]byte{}, txs, previousHash, 0}
 	pow := NewProof(block)
-	nounce, hash := pow.Run()
+	nonce, hash := pow.Run()
 
 	block.Hash = hash[:]
-	block.Nounce = nounce
+	block.Nonce = nonce
 
 	return block
 }

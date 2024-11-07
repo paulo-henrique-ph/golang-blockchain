@@ -12,7 +12,7 @@ import (
 
 // Take data from the block
 
-// Create a nounce which starts at 0
+// Create a counter (nonce) which starts at 0
 
 // create a hash from the data plus the counter
 
@@ -37,12 +37,12 @@ func NewProof(block *Block) *ProofOfWork {
 	return pow
 }
 
-func (pow *ProofOfWork) InitData(nounce int) []byte {
+func (pow *ProofOfWork) InitData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
 			pow.Block.PreviousHash,
 			pow.Block.HashTransactions(),
-			ToHex(int64(nounce)),
+			ToHex(int64(nonce)),
 			ToHex(int64(Difficulty)),
 		},
 		[]byte{},
@@ -55,10 +55,10 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 	var intHash big.Int
 	var hash [32]byte
 
-	nounce := 0
+	nonce := 0
 
-	for nounce < math.MaxInt64 {
-		data := pow.InitData(nounce)
+	for nonce < math.MaxInt64 {
+		data := pow.InitData(nonce)
 		hash = sha256.Sum256(data)
 
 		fmt.Printf("\r%x", hash)
@@ -67,17 +67,17 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 		if intHash.Cmp(pow.Target) == -1 {
 			break
 		} else {
-			nounce++
+			nonce++
 		}
 	}
 
-	return nounce, hash[:]
+	return nonce, hash[:]
 }
 
 func (pow *ProofOfWork) Validate() bool {
 	var intHash big.Int
 
-	data := pow.InitData(pow.Block.Nounce)
+	data := pow.InitData(pow.Block.Nonce)
 
 	hash := sha256.Sum256(data)
 	intHash.SetBytes(hash[:])

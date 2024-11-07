@@ -138,7 +138,7 @@ func (cli *CommandLine) Run() {
 		err := getBalanceCmd.Parse(os.Args[2:])
 		blockchain.Handle(err)
 	case "createblockchain":
-		err := getBalanceCmd.Parse(os.Args[2:])
+		err := createBlockChainCmd.Parse(os.Args[2:])
 		blockchain.Handle(err)
 	case "printchain":
 		err := printChainCmd.Parse(os.Args[2:])

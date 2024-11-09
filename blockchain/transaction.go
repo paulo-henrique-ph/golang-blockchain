@@ -141,9 +141,7 @@ func (tx *Transaction) TrimmedCopy() Transaction {
 		outputs = append(outputs, TxOutput{out.Value, out.PubKeyHash})
 	}
 
-	txCopy := Transaction{tx.ID, inputs, outputs}
-
-	return txCopy
+	return Transaction{tx.ID, inputs, outputs}
 }
 
 func (tx *Transaction) Verify(prevTxs map[string]Transaction) bool {
@@ -184,6 +182,7 @@ func (tx *Transaction) Verify(prevTxs map[string]Transaction) bool {
 			return false
 		}
 	}
+
 	return true
 }
 

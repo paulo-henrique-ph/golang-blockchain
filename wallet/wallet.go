@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
+	"math/big"
 
 	"golang.org/x/crypto/ripemd160"
 )
@@ -22,6 +23,12 @@ type Wallet struct {
 	PublicKey  []byte
 }
 
+type _PrivateKey struct {
+	D          *big.Int
+	PublicKeyX *big.Int
+	PublicKeyY *big.Int
+}
+
 func (wallet Wallet) Address() []byte {
 	pubHash := PublicKeyHash(wallet.PublicKey)
 
@@ -29,13 +36,11 @@ func (wallet Wallet) Address() []byte {
 	checksum := Checksum(versionedHash)
 
 	fullHash := append(versionedHash, checksum...)
-	address := Base58Encode(fullHash)
 
 	fmt.Printf("public key: %x\n", wallet.PublicKey)
 	fmt.Printf("public hash: %x\n", pubHash)
-	fmt.Printf("address: %x\n", address)
 
-	return address
+	return Base58Encode(fullHash)
 }
 
 func ValidateAddress(address string) bool {
@@ -45,7 +50,7 @@ func ValidateAddress(address string) bool {
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-checksumLength]
 	targetChecksum := Checksum(append([]byte{version}, pubKeyHash...))
 
-	return bytes.Compare(actualCheckSum, targetChecksum) == 0
+	return bytes.Equal(actualCheckSum, targetChecksum)
 }
 
 func NewKeyPair() (ecdsa.PrivateKey, []byte) {
@@ -55,16 +60,15 @@ func NewKeyPair() (ecdsa.PrivateKey, []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-
 	pub := append(private.PublicKey.X.Bytes(), private.Y.Bytes()...)
+
 	return *private, pub
 }
 
 func MakeWallet() *Wallet {
 	private, public := NewKeyPair()
-	wallet := Wallet{private, public}
 
-	return &wallet
+	return &Wallet{private, public}
 }
 
 func PublicKeyHash(pubKey []byte) []byte {
@@ -76,9 +80,7 @@ func PublicKeyHash(pubKey []byte) []byte {
 		log.Panic(err)
 	}
 
-	publicRipMD := hasher.Sum(nil)
-
-	return publicRipMD
+	return hasher.Sum(nil)
 }
 
 func Checksum(payload []byte) []byte {

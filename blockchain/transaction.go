@@ -45,19 +45,7 @@ func (tx *Transaction) Hash() []byte {
 	return hash[:]
 }
 
-func (tx *Transaction) SetID() {
-	var encoded bytes.Buffer
-	var hash [32]byte
-
-	encode := gob.NewEncoder(&encoded)
-	err := encode.Encode(tx)
-	Handle(err)
-
-	hash = sha256.Sum256(encoded.Bytes())
-	tx.ID = hash[:]
-}
-
-func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction {
+func NewTransaction(from, to string, amount int, UTXO *UTXOSet) *Transaction {
 	var inputs []TxInput
 	var outputs []TxOutput
 
@@ -66,14 +54,14 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 	w := wallets.GetWallet(from)
 	pubHashKey := wallet.PublicKeyHash(w.PublicKey)
 
-	acc, validOutputs := chain.FindSpendableOutputs(pubHashKey, amount)
+	acc, validOutputs := UTXO.FindSpendableOutputs(pubHashKey, amount)
 
 	if acc < amount {
 		log.Panic("Error: not enough funds")
 	}
 
-	for txid, outs := range validOutputs {
-		txID, err := hex.DecodeString(txid)
+	for txId, outs := range validOutputs {
+		txID, err := hex.DecodeString(txId)
 		Handle(err)
 
 		for _, out := range outs {
@@ -90,7 +78,7 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 
 	tx := Transaction{nil, inputs, outputs}
 	tx.ID = tx.Hash()
-	chain.SignTransaction(&tx, w.PriveteKey)
+	UTXO.BlockChain.SignTransaction(&tx, w.PrivateKey)
 
 	return &tx
 }
@@ -100,11 +88,11 @@ func CoinbaseTx(to, data string) *Transaction {
 		data = fmt.Sprintf("Coin to %s", to)
 	}
 
-	txin := TxInput{[]byte{}, -1, nil, []byte(data)}
-	txout := NewTxOutput(100, to)
+	txIn := TxInput{[]byte{}, -1, nil, []byte(data)}
+	txOut := NewTxOutput(100, to)
 
-	tx := Transaction{nil, []TxInput{txin}, []TxOutput{*txout}}
-	tx.SetID()
+	tx := Transaction{nil, []TxInput{txIn}, []TxOutput{*txOut}}
+	tx.ID = tx.Hash()
 
 	return &tx
 }
@@ -113,7 +101,7 @@ func (tx *Transaction) IsCoinbase() bool {
 	return len(tx.Inputs) == 1 && len(tx.Inputs[0].ID) == 0 && tx.Inputs[0].Out == -1
 }
 
-func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTxs map[string]Transaction) {
+func (tx *Transaction) Sign(privateKey ecdsa.PrivateKey, prevTxs map[string]Transaction) {
 	if tx.IsCoinbase() {
 		return
 	}
@@ -133,7 +121,7 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTxs map[string]Transac
 		txCopy.ID = txCopy.Hash()
 		txCopy.Inputs[inId].PubKey = nil
 
-		r, s, err := ecdsa.Sign(rand.Reader, &privKey, txCopy.ID)
+		r, s, err := ecdsa.Sign(rand.Reader, &privateKey, txCopy.ID)
 		Handle(err)
 		signature := append(r.Bytes(), s.Bytes()...)
 
@@ -191,7 +179,7 @@ func (tx *Transaction) Verify(prevTxs map[string]Transaction) bool {
 		x.SetBytes(in.PubKey[:(keyLen / 2)])
 		y.SetBytes(in.PubKey[(keyLen / 2):])
 
-		rawPubKey := ecdsa.PublicKey{curve, &x, &y}
+		rawPubKey := ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
 		if !ecdsa.Verify(&rawPubKey, txCopy.ID, &r, &s) {
 			return false
 		}

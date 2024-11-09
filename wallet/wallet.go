@@ -18,7 +18,7 @@ const (
 )
 
 type Wallet struct {
-	PriveteKey ecdsa.PrivateKey
+	PrivateKey ecdsa.PrivateKey
 	PublicKey  []byte
 }
 

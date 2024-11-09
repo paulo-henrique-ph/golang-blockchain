@@ -42,35 +42,35 @@ func CreateWallets() (*Wallets, error) {
 	return &wallets, err
 }
 
-func (ws *Wallets) AddWallet() string {
+func (wallets *Wallets) AddWallet() string {
 	wallet := MakeWallet()
 	address := fmt.Sprintf("%s", wallet.Address())
 
-	ws.Wallets[address] = wallet
+	wallets.Wallets[address] = wallet
 
 	return address
 }
 
-func (ws *Wallets) GetAllAddresses() []string {
+func (wallets *Wallets) GetAllAddresses() []string {
 	var addresses []string
 
-	for address := range ws.Wallets {
+	for address := range wallets.Wallets {
 		addresses = append(addresses, address)
 	}
 
 	return addresses
 }
 
-func (ws *Wallets) GetWallet(address string) Wallet {
-	return *ws.Wallets[address]
+func (wallets *Wallets) GetWallet(address string) Wallet {
+	return *wallets.Wallets[address]
 }
 
-func (ws *Wallets) LoadFile() error {
+func (wallets *Wallets) LoadFile() error {
 	if _, err := os.Stat(walletFile); os.IsNotExist(err) {
 		return err
 	}
 
-	var wallets Wallets
+	var ws Wallets
 
 	fileContent, err := ioutil.ReadFile(walletFile)
 	if err != nil {
@@ -84,7 +84,7 @@ func (ws *Wallets) LoadFile() error {
 		return err
 	}
 
-	ws.Wallets = wallets.Wallets
+	wallets.Wallets = ws.Wallets
 
 	return nil
 }

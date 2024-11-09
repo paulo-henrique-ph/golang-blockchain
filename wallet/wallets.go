@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"encoding/gob"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -27,7 +26,7 @@ func (wallets *Wallets) SaveFile() {
 		log.Panic(err)
 	}
 
-	err = ioutil.WriteFile(walletFile, content.Bytes(), 0644)
+	err = os.WriteFile(walletFile, content.Bytes(), 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +71,7 @@ func (wallets *Wallets) LoadFile() error {
 
 	var ws Wallets
 
-	fileContent, err := ioutil.ReadFile(walletFile)
+	fileContent, err := os.ReadFile(walletFile)
 	if err != nil {
 		return err
 	}
